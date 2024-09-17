@@ -1,0 +1,110 @@
+import uuid
+
+# In-memory storage for simplicity
+users = {}
+categories = {
+    1: {"name": "Footwear"},
+    2: {"name": "Clothing"},
+    3: {"name": "Electronics"},
+}
+items = {
+    1: [{"id": 101, "name": "Running Shoes", "price": 50}, {"id": 102, "name": "Sandals", "price": 20}],
+    2: [{"id": 201, "name": "Jeans", "price": 40}, {"id": 202, "name": "T-shirt", "price": 15}],
+    3: [{"id": 301, "name": "Smartphone", "price": 200}, {"id": 302, "name": "Laptop", "price": 1000}]
+}
+carts = {}
+payment_options = ["UPI", "Debit Card"]
+
+
+# Function to register or login users (public login can be handled with a guest account)
+def login(username):
+    if username not in users:
+        # Register new user
+        user_id = str(uuid.uuid4())
+        users[username] = {"id": user_id, "cart": []}
+        print(f"New user '{username}' registered.")
+    print(f"User '{username}' logged in.")
+    return users[username]["id"]
+
+
+# Category management: adding/updating categories
+def add_category(category_name):
+    category_id = max(categories.keys()) + 1
+    categories[category_id] = {"name": category_name}
+    print(f"Category '{category_name}' added.")
+    return category_id
+
+
+def update_category(category_id, new_name):
+    if category_id in categories:
+        categories[category_id]["name"] = new_name
+        print(f"Category ID {category_id} updated to '{new_name}'.")
+    else:
+        print(f"Category ID {category_id} does not exist.")
+
+
+# Cart functionality
+def add_to_cart(username, category_id, item_id):
+    if username in users:
+        user_cart = users[username]["cart"]
+        category_items = items.get(category_id, [])
+        item = next((i for i in category_items if i["id"] == item_id), None)
+        if item:
+            user_cart.append(item)
+            print(f"Item '{item['name']}' added to cart.")
+        else:
+            print(f"Item with ID {item_id} not found in category {category_id}.")
+    else:
+        print("User not found.")
+
+
+def remove_from_cart(username, item_id):
+    if username in users:
+        user_cart = users[username]["cart"]
+        item = next((i for i in user_cart if i["id"] == item_id), None)
+        if item:
+            user_cart.remove(item)
+            print(f"Item '{item['name']}' removed from cart.")
+        else:
+            print(f"Item with ID {item_id} not found in cart.")
+    else:
+        print("User not found.")
+
+
+# Simulating a payment process
+def process_payment(username, payment_type):
+    if payment_type not in payment_options:
+        print(f"Payment type '{payment_type}' not supported.")
+        return
+
+    if username in users and users[username]["cart"]:
+        total = sum(item['price'] for item in users[username]["cart"])
+        print(f"Processing payment of ${total} via {payment_type}.")
+        # Clear cart after payment
+        users[username]["cart"].clear()
+        print("Payment successful. Cart cleared.")
+    else:
+        print("User not found or cart is empty.")
+
+
+# Example usage
+if __name__ == "__main__":
+    # User login
+    username = "john_doe"
+    login(username)
+
+    # Adding categories
+    add_category("Books")
+
+    # Updating a category
+    update_category(1, "Sports Footwear")
+
+    # Add items to cart
+    add_to_cart(username, 1, 101)  # Add 'Running Shoes'
+    add_to_cart(username, 3, 301)  # Add 'Smartphone'
+
+    # Remove item from cart
+    remove_from_cart(username, 101)
+
+    # Process payment
+    process_payment(username, "UPI")
